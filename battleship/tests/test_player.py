@@ -20,7 +20,7 @@ def test_player_constructor():
 
 
 def test_player_repr(player_obj):
-    assert str(player_obj) == "Player Jeff Probst"
+    assert str(player_obj) == "Jeff Probst"
 
 
 @mock.patch.object(player.Player, '_ask_user_for_input')
@@ -49,4 +49,4 @@ def test_player_pick_move_if_board_invalid(player_obj):
 def test_cpu_player_repr():
     mock_board = mock.MagicMock()
     p = player.CPUPlayer(mock_board, "Jack Sparrow")
-    assert str(p) == "CPU Player Jack Sparrow"
+    assert str(p) == "Jack Sparrow (CPU opponent)"
