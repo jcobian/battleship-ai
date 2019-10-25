@@ -1,5 +1,5 @@
 import random
-from typing import List
+from typing import List, Tuple
 
 from battleship.board import Board, BOARD_NUM_ROWS, BOARD_NUM_COLS
 from battleship.errors import InvalidBoardError, InvalidMoveError
@@ -13,7 +13,7 @@ class Player:
         self.name = name or self._generate_name()
         self.board = board
 
-    def pick_move(self, board: Board) -> (int, int):
+    def pick_move(self, board: Board) -> Tuple[int, int]:
         """Prompts the player to make a move to execute on a given board
         Paramters
         ---------
@@ -55,7 +55,7 @@ class Player:
     def ships(self) -> List[Ship]:
         return self.board.ships
 
-    def _ask_user_for_input(self) -> (int, int):
+    def _ask_user_for_input(self) -> Tuple[int, int]:
         prompt = """
             Where would you like to play?
             Specify as 2 comma separated values for the
@@ -73,7 +73,7 @@ class Player:
 
 
 class CPUPlayer(Player):
-    def pick_move(self, board: Board) -> (int, int):
+    def pick_move(self, board: Board) -> Tuple[int, int]:
         """CPU logic to pick a move"""
         # TODO: For now, just random. Next steps is to make it smart
         while True:
