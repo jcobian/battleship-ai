@@ -1,7 +1,9 @@
 from collections import defaultdict
 import random
+from typing import List, Optional
 
-from battleship.ship import Ship
+from battleship.errors import AlreadyFiredError
+from battleship.ship import Ship, ShipPiece, ShipType
 
 BOARD_NUM_ROWS = 8
 BOARD_NUM_COLS = 8
@@ -10,15 +12,15 @@ BOARD_NUM_COLS = 8
 class Board:
     def __init__(self):
         self.ships = [
-            Ship("Carrier", 5),
-            Ship("Battleship", 4),
-            Ship("Frigate", 3),
-            Ship("Submarine", 3),
-            Ship("Destroyer", 2),
+            Ship(ShipType.CARRIER),
+            Ship(ShipType.BATTLESHIP),
+            Ship(ShipType.FRIGATE),
+            Ship(ShipType.SUBMARINE),
+            Ship(ShipType.DESTROYER),
         ]
         self.game_board = self._generate_game_board(self.ships)
 
-    def show(self, censored=True):
+    def show(self, censored: bool = True) -> str:
         """Show the board
 
         Parameters
@@ -42,16 +44,26 @@ class Board:
             out += "\n\n"
         return out
 
-    def is_valid_move(self, row, col):
-        if row >= BOARD_NUM_ROWS or col >= BOARD_NUM_COLS:
-            return False
-        if row < 0 or col < 0:
-            return False
+    def is_valid_move(self, row: int, col: int) -> (bool, Optional[str]):
+        # first check if is out of bounds
+        if row >= BOARD_NUM_ROWS:
+            return (False, f"{row} is too big, must be "
+                           f"less than {BOARD_NUM_ROWS}")
+        if col >= BOARD_NUM_COLS:
+            return (False, f"{col} is too big, must be "
+                           f"less than {BOARD_NUM_COLS}")
+        if row < 0:
+            return (False, f"{row} must be greater than or equal to 0")
+        if col < 0:
+            return (False, f"{col} must be greater than or equal to 0")
 
-        # return false if it has already been attempted
-        return not self.game_board[row][col].attemptedHit
+        # now make sure cell hasn't been fired at already
+        board_cell = self.game_board[row][col]
+        is_valid = False if board_cell.has_been_attempted() else True
+        err = None if is_valid else 'cell has already been fired at'
+        return (is_valid, err)
 
-    def _generate_game_board(self, ships):
+    def _generate_game_board(self, ships: List[Ship]) -> List[List[int]]:
         # first initialize an empty board
         board = []
         for row in range(BOARD_NUM_ROWS):
@@ -60,10 +72,12 @@ class Board:
                 board_cell = BoardCell()
                 board[row].append(board_cell)
 
+        # now place all the ships on the board randomly
         self._place_ships_on_game_board(board, ships)
         return board
 
-    def _place_ships_on_game_board(self, board, ships):
+    def _place_ships_on_game_board(self, board: List[List[int]],
+                                   ships: List[Ship]):
         def place_ship_on_game_board(board, ship):
             # key: tuple of (row, col, position)
             # value: bool on if we've attempted to place this ship here
@@ -73,6 +87,7 @@ class Board:
                 col = random.randint(0, BOARD_NUM_COLS - 1)
                 position = random.choice(['vertical', 'horizontal'])
 
+                # optimization so we don't retry the same place twice
                 if attempted[(row, col, position)] is True:
                     continue
 
@@ -87,21 +102,23 @@ class Board:
         for ship in ships:
             place_ship_on_game_board(board, ship)
 
-    def _place_ship_at_position(self, board, ship, row, col, position):
+    def _place_ship_at_position(self, board: List[List[int]], ship: Ship,
+                                row: int, col: int, position: str):
         if position == 'horizontal':
             row_to_fill = board[row][col: col + ship.size]
             for next_piece_index, board_cell in enumerate(row_to_fill):
                 shipPiece = ship.pieces[next_piece_index]
-                board_cell.placeShipPieceHere(shipPiece, ship)
+                board_cell.set_ship(shipPiece, ship)
         else:
             column_to_fill = []
             for i in range(row, row + ship.size):
                 column_to_fill.append(board[i][col])
             for next_piece_index, board_cell in enumerate(column_to_fill):
                 shipPiece = ship.pieces[next_piece_index]
-                board_cell.placeShipPieceHere(shipPiece, ship)
+                board_cell.set_ship(shipPiece, ship)
 
-    def _can_place_ship_at_position(self, board, ship, row, col, position):
+    def _can_place_ship_at_position(self, board: List[List[int]], ship: Ship,
+                                    row: int, col: int, position: str):
         if position == 'horizontal':
             # ship is too big to fit here horizontally
             if col + ship.size > BOARD_NUM_COLS:
@@ -120,60 +137,61 @@ class Board:
 
 
 class BoardCell:
-    def __init__(self, value=None):
-        """Creates a cell on the board
-
-        Parameters
-        ----------
-        value : `battleship.ship.ShipPiece`, optional
-            If not supplied, this is an empty piece on the board
-            If ShipPiece, a piece of a ship is located here
-        """
-
-        self.attemptedHit = False
-        self.value = value
+    def __init__(self):
+        """Creates an empty cell on the board"""
+        self.attempted_hit = False
+        self.ship_piece = None
         self.ship = None
 
-    def placeShipPieceHere(self, shipPiece, ship):
-        self.value = shipPiece
+    def set_ship(self, ship_piece: ShipPiece, ship: Ship):
+        self.ship_piece = ship_piece
         self.ship = ship
 
-    def fire(self):
-        self.attemptedHit = True
+    def fire(self) -> (int, int):
+        if self.has_been_attempted():
+            raise AlreadyFiredError
+        self.attempted_hit = True
         is_hit = False
         is_ship_down = False
 
         if not self.empty():
-            ship_piece = self.value
-            ship_piece.hit = True
+            self.ship_piece.hit = True
             is_hit = True
             is_ship_down = self.ship.is_destroyed()
 
         return (is_hit, is_ship_down)
 
-    def empty(self):
-        return self.value is None
+    def has_been_attempted(self) -> bool:
+        return self.attempted_hit
 
-    # opponent
-    # . if empty and i haven't tried
-    # O if i've tried and it is empty
-    # X if i've tried and it was a hit
-    # my board
-    # . if empty
-    # O if they tried that place and it was empty
-    # X if they 've tried and it was a hit
-    # PieceName if they haven't tried and a piece is there
+    def empty(self) -> bool:
+        return self.ship_piece is None
+
     def show(self, censored=True):
-        if self.attemptedHit and self.empty():
+        """Shows the cell
+
+        If looking at your own board (censored = False):
+            . if the cell is empty
+            O if the cell was fired at and it does not have a piece of a ship
+            X if the cell was fired at and it did contain a piece of a ship
+            If the cell contains a ship and they haven't fired at it,
+            it contains a letter representing the ship type
+
+        If looking at your opponent's board (censored = True):
+            . if the cell is empty and you haven't fired at it
+            O if you fired at it and there was not a piece of a ship there
+            X if you fired at it and there was a piece of a ship there
+        """
+        if self.has_been_attempted() and self.empty():
             return "O"
         if self.empty():
             return "."
 
-        if self.attemptedHit and not self.empty():
+        if self.has_been_attempted() and not self.empty():
             return "X"
 
-        if not self.attemptedHit and not self.empty():
+        if not self.has_been_attempted() and not self.empty():
             if censored:
                 return "."
             else:
-                return str(self.value)
+                return str(self.ship_piece)

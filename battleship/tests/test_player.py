@@ -19,10 +19,6 @@ def test_player_constructor():
     assert p.board == mock_board
 
 
-def test_player_ships(player_obj):
-    assert player_obj.ships() == player_obj.board.ships
-
-
 def test_player_repr(player_obj):
     assert str(player_obj) == "Player Jeff Probst"
 
@@ -31,7 +27,7 @@ def test_player_repr(player_obj):
 def test_player_pick_move(mock_ask_user, player_obj):
     mock_ask_user.return_value = (1, 2)
     other_board = mock.MagicMock()
-    other_board.is_valid_move.return_value = True
+    other_board.is_valid_move.return_value = (True, None)
     assert player_obj.pick_move(other_board) == (1, 2)
 
 
@@ -39,9 +35,10 @@ def test_player_pick_move(mock_ask_user, player_obj):
 def test_player_pick_move_if_move_invalid(mock_ask_user, player_obj):
     mock_ask_user.return_value = (1, 2)
     other_board = mock.MagicMock()
-    other_board.is_valid_move.return_value = False
-    with pytest.raises(errors.InvalidMoveError):
+    other_board.is_valid_move.return_value = (False, 'some error')
+    with pytest.raises(errors.InvalidMoveError) as excinfo:
         player_obj.pick_move(other_board)
+        assert 'some error' in str(excinfo.value)
 
 
 def test_player_pick_move_if_board_invalid(player_obj):
