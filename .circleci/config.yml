@@ -1,0 +1,25 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/python:3.6.5
+    steps:
+      - checkout
+      - run:
+          name: Install Dependencies
+          command: |
+              python3 -m venv venv
+              . venv/bin/activate
+              pip install -r requirements.txt
+              pip install -r dev-requirements.txt
+              python setup.py develop
+      - run:
+          name: Run Tests
+          command: |
+              . venv/bin/activate
+              pytest --cov=battleship battleship
+      - run:
+          name: Run Linter
+          command: |
+              . venv/bin/activate
+              flake8 battleship
