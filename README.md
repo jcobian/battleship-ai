@@ -20,11 +20,11 @@ python setup.py develop
 ### Tests
 Install the dev requirements
 ```bash
-pytest
+pytest --cov=battleship battleship
 ```
 
 ### Linter
 Install the dev requirements
 ```bash
-pytest --cov=battleship battleship
+flake8 battleship
 ```
