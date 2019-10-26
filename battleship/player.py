@@ -74,8 +74,9 @@ class Player:
 
 class CPUPlayer(Player):
     def pick_move(self, board: Board) -> Tuple[int, int]:
-        """CPU logic to pick a move"""
-        # TODO: For now, just random. Next steps is to make it smart
+        raise NotImplementedError
+
+    def pick_random_move(self, board: Board) -> Tuple[int, int]:
         while True:
             row = random.randint(0, BOARD_NUM_ROWS)
             col = random.randint(0, BOARD_NUM_COLS)
@@ -86,3 +87,10 @@ class CPUPlayer(Player):
 
     def __repr__(self):
         return f"{super().__repr__()} (CPU opponent)"
+
+
+class CPUPlayerRandom(CPUPlayer):
+    """A CPU that picks a random move"""
+    def pick_move(self, board: Board) -> Tuple[int, int]:
+        """CPU logic to pick a move"""
+        return super().pick_random_move(board)

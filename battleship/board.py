@@ -105,6 +105,50 @@ class Board:
             out += "\n\n"
         return out
 
+    def serialize(self) -> List[int]:
+        """Returns a serialized version of the board
+
+        The first BOARD_NUM_COLS elements are the first row,
+        the next BOARD_NUM_COLS are the next row, etc
+
+        -1 has not yet been fired
+        0 has been fired, no ship
+        1 has been fired, ship present
+        """
+        out = []
+        for row_index in range(BOARD_NUM_ROWS):
+            row = self.game_board[row_index]
+            for board_cell in row:
+                value = None
+                if not board_cell.has_been_attempted():
+                    value = -1
+                else:
+                    if board_cell.empty():
+                        value = 0
+                    else:
+                        value = 1
+                out.append(value)
+        return out
+
+    def ship_at(self, serialized_index: int) -> Optional[Ship]:
+        row_index, col_index = self.position_for_serialized_index(
+            serialized_index)
+        board_cell = self.game_board[row_index][col_index]
+        return board_cell.ship
+
+    def fire(self, serialized_index: int) -> Tuple[int, int]:
+        row_index, col_index = self.position_for_serialized_index(
+            serialized_index)
+        board_cell = self.game_board[row_index][col_index]
+        return board_cell.fire()
+
+    def position_for_serialized_index(
+            self,
+            serialized_index: int) -> Tuple[int, int]:
+        col_index = serialized_index % BOARD_NUM_COLS
+        row_index = int(serialized_index / BOARD_NUM_ROWS)
+        return (row_index, col_index)
+
     def is_valid_move(self, row: int, col: int) -> Tuple[bool, Optional[str]]:
         # first check if is out of bounds
         if row >= BOARD_NUM_ROWS:

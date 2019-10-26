@@ -5,6 +5,14 @@ A project to play Battleship against a CPU player.
 ### Usage
 
 Requires Python 3.6 or greater
+
+Install requirements:
+```bash
+pip install -r requirements.txt
+python setup.py install # or python setup.py develop
+```
+
+Play the game:
 ```bash
 python main.py
 ```

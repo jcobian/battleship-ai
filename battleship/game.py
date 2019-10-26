@@ -1,6 +1,10 @@
 import random
 
-from battleship.player import Player, CPUPlayer
+from battleship.player import (
+    Player,
+    CPUPlayerRandom,
+)
+from battleship.cpu_player_reinforcement import CPUPlayerReinforcment
 from battleship.board import Board
 from battleship.errors import InvalidMoveError
 
@@ -17,14 +21,24 @@ _MISS_PHRASES = [
 
 
 class Game:
-    def __init__(self, human_player_name: str = None):
+    def __init__(self, human_player_name: str = None,
+                 cpu_strategy: str = None):
         self.human_board = Board()
         self.cpu_board = Board()
 
         self.human_player = Player(self.human_board,
                                    name=human_player_name)
-        self.cpu_player = CPUPlayer(self.cpu_board,
-                                    "Jack Sparrow")
+
+        cpu_player = None
+        cpu_player_name = "Jack Sparrow"
+        if cpu_strategy == 'random':
+            cpu_player = CPUPlayerRandom(self.cpu_board,
+                                         cpu_player_name)
+        elif cpu_strategy == 'reinforcement_learning':
+            cpu_player = CPUPlayerReinforcment(self.cpu_board,
+                                               cpu_player_name)
+            cpu_player.train()
+        self.cpu_player = cpu_player
 
     def start_game(self):
         """Plays Battleship in the terminal by asking for user input"""
