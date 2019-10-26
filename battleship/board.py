@@ -1,6 +1,6 @@
 from collections import defaultdict
 import random
-from typing import List, Optional, Tuple
+from typing import List, Optional, Set, Tuple
 
 from battleship.errors import AlreadyFiredError
 from battleship.ship import Ship, ShipPiece, ShipType
@@ -125,7 +125,7 @@ class Board:
         return (is_valid, err)
 
     def surrounding_positions(
-            self, positions: List[Tuple[int, int]]) -> List[Tuple[int, int]]:
+            self, positions: List[Tuple[int, int]]) -> Set[Tuple[int, int]]:
         """Returns a list of positions that surround a given a list of positions
 
         Notes
