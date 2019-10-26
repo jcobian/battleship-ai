@@ -124,6 +124,35 @@ class Board:
         err = None if is_valid else 'cell has already been fired at'
         return (is_valid, err)
 
+    def surrounding_positions(
+            self, positions: List[Tuple[int, int]]) -> List[Tuple[int, int]]:
+        """Returns a list of positions that surround a given a list of positions
+
+        Notes
+        -----
+        Will only return valid moves that are above, below, to the left,
+        or to the right
+        """
+        # return a set to we don't return the same spot twice
+        result = set()
+        spots_to_check = []
+        for row, col in positions:
+            # spot above
+            spots_to_check.append((row - 1, col))
+            # spot below
+            spots_to_check.append((row + 1, col))
+            # spot to left
+            spots_to_check.append((row, col - 1))
+            # spot to right
+            spots_to_check.append((row, col + 1))
+        # now for each spot, make sure it is valid
+        # if so, return as a surrounding position
+        for row, col in spots_to_check:
+            is_valid, _ = self.is_valid_move(row, col)
+            if is_valid:
+                result.add((row, col))
+        return result
+
     def _generate_game_board(self, ships: List[Ship]) -> List[List[BoardCell]]:
         # first initialize an empty board
         board: List[List[BoardCell]] = []
