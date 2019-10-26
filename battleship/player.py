@@ -12,6 +12,8 @@ class Player:
     def __init__(self, board: Board, name: str = None):
         self.name = name or self._generate_name()
         self.board = board
+        # keep track of the last succesful hits
+        self.last_hits: List[Tuple[int, int]] = []
 
     def pick_move(self, board: Board) -> Tuple[int, int]:
         """Prompts the player to make a move to execute on a given board
@@ -47,6 +49,12 @@ class Player:
     def make_move(self, board: Board, row: int, col: int):
         board_cell = board.game_board[row][col]
         is_hit, is_ship_down = board_cell.fire()
+        if is_hit:
+            self.last_hits.append((row, col))
+        if is_ship_down:
+            # once we've taken a ship down, can forget about the last hit
+            # you've made. Time to search elsewhere
+            self.last_hits = []
         return (is_hit, is_ship_down)
 
     def all_ships_down(self) -> bool:
@@ -73,9 +81,8 @@ class Player:
 
 
 class CPUPlayer(Player):
-    def pick_move(self, board: Board) -> Tuple[int, int]:
+    def _pick_random_move(self, board: Board) -> Tuple[int, int]:
         """CPU logic to pick a move"""
-        # TODO: For now, just random. Next steps is to make it smart
         while True:
             row = random.randint(0, BOARD_NUM_ROWS)
             col = random.randint(0, BOARD_NUM_COLS)
@@ -83,6 +90,25 @@ class CPUPlayer(Player):
             if is_valid:
                 break
         return (row, col)
+
+    def pick_move(self, board: Board) -> Tuple[int, int]:
+        # if we are flying blind, just go for anything
+        if len(self.last_hits) == 0:
+            return self._pick_random_move(board)
+
+        # find all positions surrounding any of our previous hits
+        surrounding_positions = board.surrounding_positions(self.last_hits)
+        for row, col in surrounding_positions:
+            # pick first surrounding position we find that is valid
+            # TODO: we can optimize to have it
+            # keep searching along a direction
+            is_valid, _ = board.is_valid_move(row, col)
+            if is_valid:
+                return (row, col)
+
+        # no valid surrounding moves, so reset the last hits
+        self.last_hits = []
+        return self.pick_move(board)
 
     def __repr__(self):
         return f"{super().__repr__()} (CPU opponent)"
