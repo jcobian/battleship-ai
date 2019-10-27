@@ -1,6 +1,6 @@
 import random
 
-from battleship.player import Player, CPUPlayer
+from battleship.player import CPUPlayer, HumanPlayer, Player
 from battleship.board import Board
 from battleship.errors import InvalidMoveError
 
@@ -21,8 +21,8 @@ class Game:
         self.human_board = Board()
         self.cpu_board = Board()
 
-        self.human_player = Player(self.human_board,
-                                   name=human_player_name)
+        self.human_player = HumanPlayer(self.human_board,
+                                        name=human_player_name)
         self.cpu_player = CPUPlayer(self.cpu_board,
                                     "Jack Sparrow")
 

@@ -9,12 +9,12 @@ from battleship import player, errors
 def player_obj():
     mock_board = mock.MagicMock()
     mock_board.ships = [mock.MagicMock(), mock.MagicMock()]
-    return player.Player(mock_board, "Jeff Probst")
+    return player.HumanPlayer(mock_board, "Jeff Probst")
 
 
 def test_player_constructor():
     mock_board = mock.MagicMock()
-    p = player.Player(mock_board, "Jeff Probst")
+    p = player.HumanPlayer(mock_board, "Jeff Probst")
     assert p.name == "Jeff Probst"
     assert p.board == mock_board
 
@@ -23,7 +23,7 @@ def test_player_repr(player_obj):
     assert str(player_obj) == "Jeff Probst"
 
 
-@mock.patch.object(player.Player, '_ask_user_for_input')
+@mock.patch.object(player.HumanPlayer, '_ask_user_for_input')
 def test_player_pick_move(mock_ask_user, player_obj):
     mock_ask_user.return_value = (1, 2)
     other_board = mock.MagicMock()
@@ -31,7 +31,7 @@ def test_player_pick_move(mock_ask_user, player_obj):
     assert player_obj.pick_move(other_board) == (1, 2)
 
 
-@mock.patch.object(player.Player, '_ask_user_for_input')
+@mock.patch.object(player.HumanPlayer, '_ask_user_for_input')
 def test_player_pick_move_if_move_invalid(mock_ask_user, player_obj):
     mock_ask_user.return_value = (1, 2)
     other_board = mock.MagicMock()
