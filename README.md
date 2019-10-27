@@ -1,4 +1,5 @@
 # battleship-ai
+[![CircleCI](https://circleci.com/gh/jcobian/battleship-ai.svg?style=svg)](https://circleci.com/gh/jcobian/battleship-ai)
 
 A project to play Battleship against a CPU player.
 
