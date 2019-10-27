@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 import random
 from typing import List, Tuple
 
@@ -8,13 +9,42 @@ from battleship.ship import Ship
 _LIST_OF_NAMES = ['Will Turner', 'Elizabeth Swann']
 
 
-class Player:
+class Player(ABC):
     def __init__(self, board: Board, name: str = None):
         self.name = name or self._generate_name()
         self.board = board
         # keep track of the last succesful hits
         self.last_hits: List[Tuple[int, int]] = []
 
+    @abstractmethod
+    def pick_move(self, board: Board) -> Tuple[int, int]:
+        pass
+
+    def make_move(self, board: Board, row: int, col: int):
+        board_cell = board.game_board[row][col]
+        is_hit, is_ship_down = board_cell.fire()
+        if is_hit:
+            self.last_hits.append((row, col))
+        if is_ship_down:
+            # once we've taken a ship down, can forget about the last hit
+            # you've made. Time to search elsewhere
+            self.last_hits = []
+        return (is_hit, is_ship_down)
+
+    def all_ships_down(self) -> bool:
+        return all([s.is_destroyed() for s in self.ships()])
+
+    def ships(self) -> List[Ship]:
+        return self.board.ships
+
+    def __repr__(self):
+        return f"{self.name}"
+
+    def _generate_name(self) -> str:
+        return random.choice(_LIST_OF_NAMES)
+
+
+class HumanPlayer(Player):
     def pick_move(self, board: Board) -> Tuple[int, int]:
         """Prompts the player to make a move to execute on a given board
         Paramters
@@ -46,23 +76,6 @@ class Player:
         else:
             raise InvalidMoveError(err)
 
-    def make_move(self, board: Board, row: int, col: int):
-        board_cell = board.game_board[row][col]
-        is_hit, is_ship_down = board_cell.fire()
-        if is_hit:
-            self.last_hits.append((row, col))
-        if is_ship_down:
-            # once we've taken a ship down, can forget about the last hit
-            # you've made. Time to search elsewhere
-            self.last_hits = []
-        return (is_hit, is_ship_down)
-
-    def all_ships_down(self) -> bool:
-        return all([s.is_destroyed() for s in self.ships()])
-
-    def ships(self) -> List[Ship]:
-        return self.board.ships
-
     def _ask_user_for_input(self) -> Tuple[int, int]:
         prompt = """
             Where would you like to play?
@@ -73,25 +86,10 @@ class Player:
         val_as_array = [int(x) for x in val.split(',')]
         return (val_as_array[0], val_as_array[1])
 
-    def __repr__(self):
-        return f"{self.name}"
-
-    def _generate_name(self) -> str:
-        return random.choice(_LIST_OF_NAMES)
-
 
 class CPUPlayer(Player):
-    def _pick_random_move(self, board: Board) -> Tuple[int, int]:
-        """CPU logic to pick a move"""
-        while True:
-            row = random.randint(0, BOARD_NUM_ROWS)
-            col = random.randint(0, BOARD_NUM_COLS)
-            is_valid, _ = board.is_valid_move(row, col)
-            if is_valid:
-                break
-        return (row, col)
-
     def pick_move(self, board: Board) -> Tuple[int, int]:
+        """CPU logic to pick a move"""
         # if we are flying blind, just go for anything
         if len(self.last_hits) == 0:
             return self._pick_random_move(board)
@@ -109,6 +107,15 @@ class CPUPlayer(Player):
         # no valid surrounding moves, so reset the last hits
         self.last_hits = []
         return self.pick_move(board)
+
+    def _pick_random_move(self, board: Board) -> Tuple[int, int]:
+        while True:
+            row = random.randint(0, BOARD_NUM_ROWS)
+            col = random.randint(0, BOARD_NUM_COLS)
+            is_valid, _ = board.is_valid_move(row, col)
+            if is_valid:
+                break
+        return (row, col)
 
     def __repr__(self):
         return f"{super().__repr__()} (CPU opponent)"

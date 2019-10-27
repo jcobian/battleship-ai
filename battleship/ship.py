@@ -14,20 +14,20 @@ class ShipType(Enum):
 class Ship:
     def __init__(self, ship_type: ShipType):
         self.ship_type = ship_type
-        self.size = self.ship_type.value[1]
+        self.size = self.ship_type.value[1]  # e.g 5 for a Carrier
         self.pieces = [ShipPiece(self.ship_type) for _ in range(self.size)]
 
     def is_destroyed(self) -> bool:
         return all([piece.hit for piece in self.pieces])
 
     def __repr__(self):
-        return self.ship_type.name
+        return self.ship_type.name  # e.g CARRIER
 
 
 class ShipPiece:
     def __init__(self, ship_type: ShipType):
-        self.ship_type = ship_type
-        self.hit = False
+        self.ship_type: ShipType = ship_type
+        self.hit: bool = False
 
     def __repr__(self):
-        return self.ship_type.value[0]
+        return self.ship_type.value[0]  # e.g C for a Carrier

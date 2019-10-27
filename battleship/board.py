@@ -12,7 +12,7 @@ BOARD_NUM_COLS = 8
 class BoardCell:
     def __init__(self):
         """Creates an empty cell on the board"""
-        self.attempted_hit = False
+        self.attempted_hit: bool = False
         self.ship_piece: ShipPiece = None
         self.ship: Ship = None
 
@@ -27,7 +27,7 @@ class BoardCell:
         is_hit = False
         is_ship_down = False
 
-        if not self.empty():
+        if self.has_ship():
             self.ship_piece.hit = True
             is_hit = True
             is_ship_down = self.ship.is_destroyed()
@@ -39,6 +39,9 @@ class BoardCell:
 
     def empty(self) -> bool:
         return self.ship_piece is None
+
+    def has_ship(self) -> bool:
+        return not self.empty()
 
     def show(self, censored=True):
         """Shows the cell
@@ -60,10 +63,10 @@ class BoardCell:
         if self.empty():
             return "."
 
-        if self.has_been_attempted() and not self.empty():
+        if self.has_been_attempted() and self.has_ship():
             return "X"
 
-        if not self.has_been_attempted() and not self.empty():
+        if not self.has_been_attempted() and self.has_ship():
             if censored:
                 return "."
             else:
@@ -153,6 +156,7 @@ class Board:
                 result.add((row, col))
         return result
 
+    # Start methods to generate a random game board with ships on it
     def _generate_game_board(self, ships: List[Ship]) -> List[List[BoardCell]]:
         # first initialize an empty board
         board: List[List[BoardCell]] = []
@@ -225,3 +229,4 @@ class Board:
             for i in range(row, row + ship.size):
                 col_to_try.append(board[i][col])
             return all([board_cell.empty() for board_cell in col_to_try])
+    # End methods to generate a random game board with ships on it
