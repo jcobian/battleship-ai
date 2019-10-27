@@ -89,6 +89,7 @@ class HumanPlayer(Player):
 
 class CPUPlayer(Player):
     def pick_move(self, board: Board) -> Tuple[int, int]:
+        """CPU logic to pick a move"""
         # if we are flying blind, just go for anything
         if len(self.last_hits) == 0:
             return self._pick_random_move(board)
@@ -108,7 +109,6 @@ class CPUPlayer(Player):
         return self.pick_move(board)
 
     def _pick_random_move(self, board: Board) -> Tuple[int, int]:
-        """CPU logic to pick a move"""
         while True:
             row = random.randint(0, BOARD_NUM_ROWS)
             col = random.randint(0, BOARD_NUM_COLS)
