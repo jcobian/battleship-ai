@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 import random
 from typing import List, Tuple
 
@@ -16,7 +16,6 @@ class Player(ABC):
         # keep track of the last succesful hits
         self.last_hits: List[Tuple[int, int]] = []
 
-    @abstractmethod
     def pick_move(self, board: Board) -> Tuple[int, int]:
         pass
 
@@ -45,16 +44,13 @@ class Player(ABC):
 
 
 class HumanPlayer(Player):
-    def pick_move(self, board: Board) -> Tuple[int, int]:
-        """Prompts the player to make a move to execute on a given board
+    def validate_move(self, board: Board,
+                      row: int, col: int):
+        """Validtes the human move on a board
         Paramters
         ---------
         board : `battleship.board.Board`
           The board to make a move on
-
-        Returns
-        -------
-        (int, int) : the row and column on the board to make a move on
 
         Raises
         ------
@@ -69,11 +65,8 @@ class HumanPlayer(Player):
         if board == self.board:
             raise InvalidBoardError("Cannot make a move on your own board")
 
-        row, col = self._ask_user_for_input()
         is_valid, err = board.is_valid_move(row, col)
-        if is_valid:
-            return (row, col)
-        else:
+        if not is_valid:
             raise InvalidMoveError(err)
 
     def _ask_user_for_input(self) -> Tuple[int, int]:

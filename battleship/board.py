@@ -24,6 +24,7 @@ class BoardCell:
         if self.has_been_attempted():
             raise AlreadyFiredError
         self.attempted_hit = True
+
         is_hit = False
         is_ship_down = False
 
@@ -59,12 +60,15 @@ class BoardCell:
             X if you fired at it and there was a piece of a ship there
         """
         if self.has_been_attempted() and self.empty():
-            return "O"
+            # miss
+            return "⚪"
         if self.empty():
             return "."
 
         if self.has_been_attempted() and self.has_ship():
-            return "X"
+            # TODO: if this is your own ship, then return
+            # 2 characters with ship label + some sort of X
+            return "🔴"
 
         if not self.has_been_attempted() and self.has_ship():
             if censored:
@@ -84,7 +88,8 @@ class Board:
         ]
         self.game_board = self._generate_game_board(self.ships)
 
-    def show(self, censored: bool = True) -> str:
+    def show(self, cursor_row, cursor_col,
+             censored: bool = True, show_cursor: bool = False) -> str:
         """Show the board
 
         Parameters
@@ -101,12 +106,25 @@ class Board:
         for col in range(BOARD_NUM_COLS):
             out += f"{col}\t"
         out += "\n"
-        for row in range(BOARD_NUM_ROWS):
-            out += f"{row}\t"
-            out += '\t'.join([board_cell.show(censored=censored)
-                             for board_cell in self.game_board[row]])
+        for row_index in range(BOARD_NUM_ROWS):
+            out += f"{row_index}\t"
+            row_array = self.game_board[row_index]
+            output_array = []
+            for col_index, board_cell in enumerate(row_array):
+                # show plane icon if it is the opponent board and
+                # the position is where cursor is at
+                if (show_cursor is True and row_index == cursor_row and
+                        col_index == cursor_col):
+                    # show plane
+                    output_array.append("✈️")
+                else:
+                    output_array.append(board_cell.show(censored=censored))
+            out += '\t'.join(output_array)
             out += "\n\n"
         return out
+
+    def is_in_bound(self, row: int, col: int) -> bool:
+        return 0 <= row < BOARD_NUM_ROWS and 0 <= col < BOARD_NUM_COLS
 
     def is_valid_move(self, row: int, col: int) -> Tuple[bool, Optional[str]]:
         # first check if is out of bounds
@@ -151,8 +169,8 @@ class Board:
         # now for each spot, make sure it is valid
         # if so, return as a surrounding position
         for row, col in spots_to_check:
-            is_valid, _ = self.is_valid_move(row, col)
-            if is_valid:
+            in_bounds = self.is_in_bound(row, col)
+            if in_bounds:
                 result.add((row, col))
         return result
 

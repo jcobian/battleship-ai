@@ -2,8 +2,7 @@ from battleship.game import Game
 
 
 def main():
-    name = input("What is your name? ")
-    game = Game(human_player_name=name)
+    game = Game(human_player_name="jon")
     game.start_game()
 
 
