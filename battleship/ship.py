@@ -4,11 +4,11 @@ from enum import Enum
 class ShipType(Enum):
     # values are tuple where first item is the representation on the board
     # and second value is the size of the ship
-    CARRIER = ('C', 5)
-    BATTLESHIP = ('B', 4)
-    FRIGATE = ('F', 3)
-    SUBMARINE = ('S', 3)
-    DESTROYER = ('D', 2)
+    CARRIER = ('🛳', 5)
+    BATTLESHIP = ('🚢', 4)
+    FRIGATE = ('⛴', 3)
+    SUBMARINE = ('🚤', 3)
+    DESTROYER = ('⛵', 2)
 
 
 class Ship:

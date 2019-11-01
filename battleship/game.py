@@ -3,6 +3,7 @@ import random
 from battleship.player import CPUPlayer, HumanPlayer, Player
 from battleship.board import Board
 from battleship.errors import InvalidMoveError
+from battleship.ui_manager import UiManager
 
 _HIT_PHRASES = [
     'Aye, you hit a ship!',
@@ -26,61 +27,57 @@ class Game:
         self.cpu_player = CPUPlayer(self.cpu_board,
                                     "Jack Sparrow")
 
+        self.ui_manager = UiManager(self.cpu_player, self.human_player)
+
     def start_game(self):
         """Plays Battleship in the terminal by asking for user input"""
         # print the board initially before starting
-        self._print_boards()
+        self.ui_manager.render()
         while True:
-            action = self._ask_for_action()
-            if action == 'q':
-                print("Game over!")
-                return
-            elif action == 'h':
-                self._print_help()
-            elif action == 'p':
-                # Human turn first
-                try:
-                    row, col = self.human_player.pick_move(self.cpu_board)
-                except InvalidMoveError as exc:
-                    print(f"This move is invalid: {exc}")
-                    continue
-
-                print("\n")
-                is_hit, is_ship_down = self.human_player.make_move(
+            # Human turn first
+            try:
+                row, col = self.ui_manager.pick_move()
+                self.human_player.validate_move(
                     self.cpu_board, row, col)
-                if is_hit:
-                    print(random.choice(_HIT_PHRASES))
-                    if is_ship_down:
-                        print("You also took down a ship!")
-                        if self.cpu_player.all_ships_down():
-                            print("That's Game over!! You win!!")
-                            return
-                else:
-                    print(random.choice(_MISS_PHRASES))
+            except InvalidMoveError as exc:
+                print(f"This move is invalid: {exc}")
+                continue
 
-                print("\n\n")
-                # Cpu turn
-                row, col = self.cpu_player.pick_move(self.human_board)
-                cpu_msg = f"{self.cpu_player} made a move at {row},{col}\n"
-                is_hit, is_ship_down = self.cpu_player.make_move(
-                    self.human_board, row, col)
-                if is_hit:
-                    cpu_msg += "And it was a hit..\n"
-                    if is_ship_down:
-                        cpu_msg += "It also took down your ship.."
-                        if self.human_player.all_ships_down():
-                            cpu_msg += "That's Game over!! You lose...."
-                            print(cpu_msg)
-                            return
-                else:
-                    cpu_msg += "And they missed!"
-                print(cpu_msg)
+            print("\n")
+            is_hit, is_ship_down = self.human_player.make_move(
+                self.cpu_board, row, col)
+            if is_hit:
+                print(random.choice(_HIT_PHRASES))
+                if is_ship_down:
+                    print("You also took down a ship!")
+                    if self.cpu_player.all_ships_down():
+                        print("That's Game over!! You win!!")
+                        return
+            else:
+                print(random.choice(_MISS_PHRASES))
 
-            elif action == 's':
-                self._print_boards()
-            elif action == 'i':
-                self._print_status(self.cpu_player)
-                self._print_status(self.human_player)
+            print("\n\n")
+            # Step 1: Human has moved, but CPU has not
+            self.ui_manager.render()
+            self.ui_manager.delay(1)
+
+            row, col = self.cpu_player.pick_move(self.human_board)
+            cpu_msg = f"{self.cpu_player} made a move at {row},{col}\n"
+            is_hit, is_ship_down = self.cpu_player.make_move(
+                self.human_board, row, col)
+            if is_hit:
+                cpu_msg += "And it was a hit..\n"
+                if is_ship_down:
+                    cpu_msg += "It also took down your ship.."
+                    if self.human_player.all_ships_down():
+                        cpu_msg += "That's Game over!! You lose...."
+                        print(cpu_msg)
+                        return
+            else:
+                cpu_msg += "And they missed!"
+            print(cpu_msg)
+            # Step 2: CPU has made move
+            self.ui_manager.render()
 
     def _print_status(self, player: Player):
         """Prints status for a given player"""
