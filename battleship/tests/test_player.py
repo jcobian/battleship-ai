@@ -2,7 +2,7 @@ import pytest
 
 from unittest import mock
 
-from battleship import player, errors
+from battleship import player
 
 
 @pytest.fixture
